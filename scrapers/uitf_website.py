@@ -4,10 +4,12 @@ from datetime import datetime
 import csv
 
 import re
-
+from os import makedirs
 
 OUTPUT_FOLDER = "data/chinabank"
 URL = 'https://uitf.com.ph/daily_navpu.php?bank_id=7'
+
+makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 response = requests.get(URL)
 
