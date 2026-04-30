@@ -7,11 +7,11 @@ from time import sleep
 import re
 from datetime import datetime
 
-from data.uitf_web_keys import bank_ids
+from features.common.uitf_web_keys import BANK_ID_MAPPING
 
 
 def extract(bank_name : str, bank_id : int):
-    OUTPUT_FOLDER = f"data/{bank_name}"
+    OUTPUT_FOLDER = f"data/navpu/{bank_name}"
     URL = f'https://uitf.com.ph/daily_navpu.php?bank_id={bank_id}'
 
     makedirs(OUTPUT_FOLDER, exist_ok=True)
@@ -20,7 +20,6 @@ def extract(bank_name : str, bank_id : int):
     response = requests.get(URL)
     assert response.status_code == 200
     soup = BeautifulSoup(response.content, 'html.parser')
-
 
     # DATE
     dt_str = soup.find('h2').get_text(strip=True)
@@ -36,16 +35,25 @@ def extract(bank_name : str, bank_id : int):
     for tb in start.find_all_next('tbody'):
         for tr in tb.find_all('tr'):
             fund_name, fund_value = [td.get_text(strip=True) for td in tr.find_all('td')[:2]]
+
+            # Skip when late update
+            try: 
+                fund_value = float(fund_value.replace(",", ""))
+
+            except Exception as e:
+                print(f'{fund_name} : {e}')
+                continue
+
             fund_name = fund_name.title().replace(" ", "_")
 
             with open(f"{OUTPUT_FOLDER}/{fund_name}.csv", 'a', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow([dt, fund_value])
             
-            # print(f'{fund_name}: {fund_value}')
+            print(f'{fund_name}: {fund_value}')
 
     sleep(0.5)
 
 if __name__ == "__main__":
-    for bank_name, bank_id in bank_ids.items():
+    for bank_name, bank_id in BANK_ID_MAPPING.items():
         extract(bank_name, bank_id)

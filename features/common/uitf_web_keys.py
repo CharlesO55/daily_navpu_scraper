@@ -1,5 +1,5 @@
 # UITF.com.ph
-bank_ids = {
+BANK_ID_MAPPING = {
     'metrobank': 1,
     'pnb': 2,
     'bpi': 3,
@@ -15,4 +15,3 @@ bank_ids = {
     'unionbank': 13,
     'ucpb': 14,
 }
-
