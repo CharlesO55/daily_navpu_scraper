@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import csv
 
 from os import makedirs
+from os.path import exists
 from time import sleep
 import re
 from datetime import datetime
@@ -61,16 +62,22 @@ def extract(bank_name : str, bank_id : int):
             
                 file_path = f"{OUTPUT_FOLDER}/{fund_name}.csv"
 
-                with open(file_path, 'r', newline='') as f:
-                    last_row = list(csv.reader(f))[-1]
-                
-                if last_row[0] != new_row[0]:
-                    with open(f"{OUTPUT_FOLDER}/{fund_name}.csv", 'a', newline='') as f:
+                # Create new file
+                if not exists(file_path):
+                    with open(file_path, 'w', newline='') as f:
                         writer = csv.writer(f)
+                        writer.writerow(['date', 'value'])
                         writer.writerow(new_row)
-                    
-                    print(f'{fund_name}: {new_row[1]}')
-            
+                # Append only if not recorded date
+                else:
+                    with open(file_path, 'r', newline='') as f:
+                        last_row = deque(csv.reader(f), maxlen=1)[0]
+
+                    if last_row[0] != new_row[0]:
+                        with open(file_path, 'a', newline='') as f:
+                            writer = csv.writer(f)
+                            writer.writerow(new_row)
+
             
             except Exception as e:
                 print(f"[ERROR] : {e}")
