@@ -21,7 +21,7 @@ jobs:
         run: pip install -r features\scrapers\requirements.txt
 
       - name: Run scraper
-        run: python features\scrapers\uitf_website.py
+        run: python -m features.scrapers.uitf_website
 
       - name: Commit and push changes
         run: |
