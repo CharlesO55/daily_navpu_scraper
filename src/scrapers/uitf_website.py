@@ -47,11 +47,8 @@ def extract(bank_name : str, bank_id : int):
     dt_str = soup.find('h2').get_text(strip=True)
     dt_match = re.search(r'([A-Za-z]{3} \d{1,2}, \d{4})', dt_str)
     
-    # dt_header = datetime.strftime(dt_str, '%b %d, %Y')
     dt_header = extract_time(dt_str=dt_match.group(1))
 
-
-    
     # FUNDS
     start = soup.find(class_="table-title mt-5")
 
@@ -59,6 +56,7 @@ def extract(bank_name : str, bank_id : int):
         for tr in tb.find_all('tr'):
             try:
                 fund_name , new_row = extract_row_values(tr=tr, dt_default=dt_header)
+                print(fund_name)
             
                 file_path = f"{OUTPUT_FOLDER}/{fund_name}.csv"
 
