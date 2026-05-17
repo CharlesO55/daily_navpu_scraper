@@ -33,7 +33,7 @@ def menu_uitf():
             df = build_df_from_uitf_funds(selected_funds)
             df = calculate_daily_delta(df)
 
-            df = df.groupby('fund_name').apply(calculate_latest_changes)
+            # df = df.groupby('fund_name').apply(calculate_latest_changes)
 
             # build_delta_table(df)
             st.session_state['df_main'] = df

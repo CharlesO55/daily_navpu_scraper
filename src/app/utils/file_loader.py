@@ -1,7 +1,7 @@
 from pathlib import Path
 import pandas as pd
 
-navpu_folder = Path("../../data/navpu")
+navpu_folder = Path("data/navpu")
 
 
 def get_bank_uitf_funds_list():

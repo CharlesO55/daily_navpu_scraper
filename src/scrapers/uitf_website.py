@@ -9,7 +9,7 @@ import re
 from datetime import datetime
 from collections import deque
 
-from features.common.uitf_web_keys import BANK_ID_MAPPING
+from src.common.uitf_web_keys import BANK_ID_MAPPING
 
 def extract_time(dt_str):
     date_obj = datetime.strptime(dt_str.strip(), "%b %d, %Y")

@@ -18,10 +18,10 @@ jobs:
           python-version: '3.12'
           
       - name: Install dependencies
-        run: pip install -r features/scrapers/requirements.txt
+        run: pip install -r src/scrapers/requirements.txt
 
       - name: Run scraper
-        run: python -m features.scrapers.uitf_website
+        run: python -m src.scrapers.uitf_website
 
       - name: Commit and push changes
         run: |
