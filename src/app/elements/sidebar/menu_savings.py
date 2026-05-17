@@ -1,12 +1,7 @@
 import streamlit as st
+import pandas as pd
 
-
-# df_main = pd.DataFrame(columns=['Date', 'Name', 'Value']).astype({
-#     'Date': 'datetime64[ns]',
-#     'Name': 'string',
-#     'Value': 'float32'
-# })
- 
+from utils.calculate_df import calculate_daily_delta, mask_date_range, append_fund_history
 
 
 def menu_savings():
@@ -24,4 +19,23 @@ def menu_savings():
         st.write(f"Net Rate : {td_net_rate * 100:.2f}%")
 
         if st.button("Add"):
-            _rate = td_net_rate / 365
+            def build_simulated_data():
+                daily_rate = td_net_rate / 365
+
+                dates = pd.date_range(start=st.session_state.get('date_start'), end=st.session_state.get('date_end'), freq='D').date
+
+                days = len(dates)
+
+                values = [1 + (i * daily_rate) for i in range(days)]
+                
+                return pd.DataFrame({
+                    'date': dates,
+                    'fund_name' : f'Benchmark ({td_gross_rate:.2f}%)',
+                    'value': values
+                })
+
+
+            df = build_simulated_data()
+            df = mask_date_range(df)
+            df = calculate_daily_delta(df)
+            append_fund_history(df)

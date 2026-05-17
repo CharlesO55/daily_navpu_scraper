@@ -33,9 +33,11 @@ def build_df_from_uitf_funds(selected_funds):
             parse_dates=['date'], 
         ).dropna().drop_duplicates()
 
+        temp_df['date'] = temp_df['date'].dt.date
         temp_df['fund_name'] = fund.get('name')
 
         df_list.append(temp_df)
+
 
     df_master = pd.concat(df_list)
     df_master.sort_values(['fund_name', 'date'], inplace=True)

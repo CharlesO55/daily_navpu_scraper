@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from datetime import date
 from dateutil.relativedelta import relativedelta
 
@@ -9,8 +10,14 @@ def initialize_session_state():
     defaults = {
         'date_start': date.today() - relativedelta(months=1),
         'date_end': date.today(),
-        'df_main': None,  
-        'increment_val': 1.0
+        
+        'df_main': pd.DataFrame({
+            'date':                 pd.Series(dtype='object'),       # Stores strictly Python dt.date objects
+            'fund_name':            pd.Series(dtype='string'),  
+            'value':                pd.Series(dtype='float32'),
+            'pct_change':           pd.Series(dtype='float32'),
+            'cumulative_return':    pd.Series(dtype='float32')
+        }),  
     }
     
     for key, value in defaults.items():
@@ -20,7 +27,7 @@ def initialize_session_state():
 
 
 def reset_session_state():
-    filter_keys = ['date_start', 'date_end', 'increment_val']
+    filter_keys = ['date_start', 'date_end']
     for key in filter_keys:
         if key in st.session_state:
             del st.session_state[key]

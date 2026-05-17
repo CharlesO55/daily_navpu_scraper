@@ -2,9 +2,8 @@ import streamlit as st
 from itertools import chain
 
 from utils.file_loader import get_bank_uitf_funds_list , build_df_from_uitf_funds
-from utils.calculate_df import calculate_daily_delta
+from utils.calculate_df import calculate_daily_delta , mask_date_range
 
-from utils.pct_table import calculate_latest_changes
 
 def menu_uitf():
     with st.expander("UITF Funds", expanded=True):
@@ -12,7 +11,8 @@ def menu_uitf():
         
         selected_banks = st.multiselect(
             "1. Select Bank(s)", 
-            options=sorted(uitf_list.keys())
+            options=sorted(uitf_list.keys()),
+            default=['chinabank']
         )
         selected_banks = sorted(selected_banks)
 
@@ -24,16 +24,13 @@ def menu_uitf():
             "2. Select Fund(s)", 
             options=available_funds,
             format_func=lambda x : x.get("name"),
-            
         )
 
 
 
         if selected_funds:
             df = build_df_from_uitf_funds(selected_funds)
+            df = mask_date_range(df)
             df = calculate_daily_delta(df)
 
-            # df = df.groupby('fund_name').apply(calculate_latest_changes)
-
-            # build_delta_table(df)
             st.session_state['df_main'] = df
