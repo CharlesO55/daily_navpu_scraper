@@ -14,4 +14,17 @@ BANK_ID_MAPPING = {
     'securitybank': 12,
     'unionbank': 13,
     'ucpb': 14,
+    'ab_capital' : 29,
+    'pbb' : 30,
+    'atram' : 31,
+    'psbank' : 32,
+    'sterling' : 33,
+    # 'robinsons' : 34, # 2024 Last entry
+    # 'cbs' : 35, #2015 Last entry
+    'ctbc': 36,
+    'manulife' : 39,
+    'maybank' : 40,
+    # 'prulife' : 41, #2023 Last entry
+    'aia' : 42,
+    'sunlife' : 43,
 }
