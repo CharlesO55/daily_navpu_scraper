@@ -2,7 +2,7 @@ name: Daily Web Scrape
 
 on:
   schedule:
-    - cron: '0 14 * * *' # Runs at 10pm UTC8
+    - cron: '0 0,14 * * 1-5' # Runs at 8am,10pm Weekdays  UTC8
   workflow_dispatch: # Manual trigger
 
 jobs:

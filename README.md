@@ -1,6 +1,7 @@
 # daily_navpu_scraper
 Perform a daily scrape of bank pages and update the csv
 
+.venv\Scripts\activate
 
 # Use
 1. [Optional] Scrape
