@@ -9,6 +9,12 @@ import re
 from datetime import datetime
 from collections import deque
 
+import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s: %(message)s"
+)
+
 from src.common.uitf_web_keys import BANK_ID_MAPPING
 
 def extract_time(dt_str):
@@ -75,7 +81,7 @@ def extract(bank_name : str, bank_id : int):
             try:
                 fund_name , new_row = extract_row_values(tr=tr, dt_default=dt_header)
                 
-                print(fund_name)
+                logging.info(fund_name)
             
                 file_path = f"{OUTPUT_FOLDER}/{fund_name}.csv"
 
@@ -97,7 +103,7 @@ def extract(bank_name : str, bank_id : int):
 
             
             except Exception as e:
-                print(f"[ERROR] : {e}")
+                logging.exception(e)
                 
                 fund_name, fund_value = extract_row_text(tr=tr)
                 
@@ -107,9 +113,24 @@ def extract(bank_name : str, bank_id : int):
 
                 continue
 
-            
+
+
+
+
+
 if __name__ == "__main__":
+    fail_cases = []
+
     for bank_name, bank_id in BANK_ID_MAPPING.items():
-        print(bank_name)
-        extract(bank_name, bank_id)
+        logging.info("Processing %s", bank_name)
+        
+        try:
+            extract(bank_name, bank_id)
+        except Exception as e:
+            logging.exception(e)
+            fail_cases.append(bank_name)
         sleep(2)
+
+    if fail_cases:
+        logging.error("Broken Bank Pages: %s", fail_cases)
+        # sys.exit(1)  # Fail the CI/CD job
