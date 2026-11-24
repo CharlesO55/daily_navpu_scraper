@@ -1,14 +1,14 @@
 import streamlit as st
 import plotly.express as px
 
-st.title("Performance Comparssion")
-
+st.set_page_config(
+    page_title="Performance Comparison",
+    page_icon="📈",
+    layout="wide"
+)
 
 from app_state import initialize_session_state
-
 from elements.sidebar.sidebar import sidebar
-
-
 
 initialize_session_state()
 
@@ -17,7 +17,7 @@ sidebar()
 
 
 if st.session_state['df_main'] is not None and not st.session_state['df_main'].empty:
-    st.subheader("Price")
+    st.title("NavPu Performace")
     st.divider()
 
     fig = px.line(
@@ -57,3 +57,5 @@ if st.session_state['df_main'] is not None and not st.session_state['df_main'].e
         'pct_change' : st.column_config.NumberColumn('Change', format='%.2f'),
         'price_history' : st.column_config.LineChartColumn('Raw Price'),
     })
+else:
+    st.info("Use the sidebar to select funds and compare against a flat rate (e.x. Time deposit/HYSA).")
