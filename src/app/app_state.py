@@ -14,9 +14,9 @@ def initialize_session_state():
         'df_main': pd.DataFrame({
             'date':                 pd.Series(dtype='object'),       # Stores strictly Python dt.date objects
             'fund_name':            pd.Series(dtype='string'),  
-            'value':                pd.Series(dtype='float32'),
-            'pct_change':           pd.Series(dtype='float32'),
-            'cumulative_return':    pd.Series(dtype='float32')
+            'value':                pd.Series(dtype='float64'),
+            'pct_change':           pd.Series(dtype='float64'),
+            'cumulative_return':    pd.Series(dtype='float64')
         }),  
     }
     

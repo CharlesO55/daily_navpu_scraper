@@ -1,4 +1,5 @@
 import streamlit as st
+import plotly.express as px
 
 st.title("Performance Comparssion")
 
@@ -15,11 +16,31 @@ sidebar()
 
 
 
-if st.session_state['df_main'] is not None:
+if st.session_state['df_main'] is not None and not st.session_state['df_main'].empty:
     st.subheader("Price")
     st.divider()
 
-    st.line_chart(data=st.session_state['df_main'], x='date', y='cumulative_return', color='fund_name')
+    fig = px.line(
+        st.session_state['df_main'],
+        x='date',
+        y='cumulative_return',
+        color='fund_name',
+        labels={
+            'date': 'Date',
+            'cumulative_return': 'Cumulative Return',
+            'fund_name': 'Fund',
+        },
+    )
+    fig.update_yaxes(tickformat='.2%')
+    fig.update_traces(hovertemplate='%{y:.2%}')
+    fig.update_layout(
+        hovermode='x unified',
+        xaxis_title='Date',
+        yaxis_title='Cumulative Return',
+        legend_title_text='Fund',
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
 
     def calc_pct_change(series):
         return 100 * (series.iloc[-1] - series.iloc[0]) / series.iloc[0]
