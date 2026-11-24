@@ -43,28 +43,29 @@ def extract_row_text(tr):
 def extract_row_values(tr, dt_default : str):
     fund_name, fund_value = extract_row_text(tr)
     if not fund_name or not fund_value:
+        # Row has no usable cells (e.g. header/spacer row) — silent skip
         return None
     
+    raw_value = fund_value  # preserve original text before any mutation
+
     if "as of" in fund_value:
         try:
             fund_value, dt_str = fund_value.split("* as of ")
             fund_dt = extract_time(dt_str.strip())
         except Exception:
-            return None
+            raise ValueError(f"Could not parse 'as of' date from: {raw_value!r}")
     else:
         fund_dt = dt_default
 
-    # Value guard: verify scraped navpu value is a float, else pass
+    # Value guard: verify scraped navpu value is a float, else raise
     try:
         clean_value = fund_value.replace(",", "").strip()
         navpu_float = float(clean_value)
     except (ValueError, TypeError):
-        logging.warning("Value guard: '%s' for '%s' is not a float, passing.", fund_value, fund_name)
-        return None
+        raise ValueError(f"Not a float: {raw_value!r}")
 
     if navpu_float <= 0 or math.isnan(navpu_float) or math.isinf(navpu_float):
-        logging.warning("Value guard: navpu %s for '%s' is invalid, passing.", navpu_float, fund_name)
-        return None
+        raise ValueError(f"Invalid navpu value: {raw_value!r} → {navpu_float}")
 
     return fund_name, [fund_dt, navpu_float]
 
@@ -128,11 +129,18 @@ def extract(bank_name : str, bank_id : int):
             except Exception as e:
                 logging.exception(e)
                 try:
-                    fund_name, fund_value = extract_row_text(tr=tr)
-                    if fund_name and fund_value:
-                        with open('data/scrape_errors.csv', 'a', newline='') as f:
-                            writer = csv.writer(f)
-                            writer.writerow([fund_name, fund_value])
+                    fund_name, raw_value = extract_row_text(tr=tr)
+                    error_path = 'data/scrape_errors.csv'
+                    write_header = not exists(error_path)
+                    with open(error_path, 'a', newline='') as f:
+                        writer = csv.writer(f)
+                        if write_header:
+                            writer.writerow(['fund_name', 'date', 'raw_value'])
+                        writer.writerow([
+                            fund_name or 'unknown',
+                            dt_header,
+                            raw_value or '',
+                        ])
                 except Exception:
                     pass
 
