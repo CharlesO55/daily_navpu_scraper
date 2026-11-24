@@ -6,6 +6,7 @@ from os import makedirs
 from os.path import exists
 from time import sleep
 import re
+import math
 from datetime import datetime
 from collections import deque
 
@@ -29,30 +30,43 @@ def extract_row_text(tr):
     | Fund Name  | Navpu |
     +------------+-------+
     '''
-    fund_name, fund_value = [td.get_text(strip=True) for td in tr.find_all('td')[:2]]
+    tds = tr.find_all('td')
+    if len(tds) < 2:
+        return None, None
+
+    fund_name, fund_value = [td.get_text(strip=True) for td in tds[:2]]
     fund_name = fund_name.title().replace(" ", "_")
-    fund_value = fund_value
 
     return fund_name, fund_value
 
 
 def extract_row_values(tr, dt_default : str):
     fund_name, fund_value = extract_row_text(tr)
+    if not fund_name or not fund_value:
+        return None
     
     if "as of" in fund_value:
-        fund_value , dt_str = fund_value.split("* as of ")
-        fund_dt = extract_time(dt_str.strip())
-
+        try:
+            fund_value, dt_str = fund_value.split("* as of ")
+            fund_dt = extract_time(dt_str.strip())
+        except Exception:
+            return None
     else:
         fund_dt = dt_default
 
-    # MUST fail under conditions of '--' data
-    fund_value = float(fund_value.replace(",", ""))
+    # Value guard: verify scraped navpu value is a float, else pass
+    try:
+        clean_value = fund_value.replace(",", "").strip()
+        navpu_float = float(clean_value)
+    except (ValueError, TypeError):
+        logging.warning("Value guard: '%s' for '%s' is not a float, passing.", fund_value, fund_name)
+        return None
 
-    if fund_value == 0:
-        raise ValueError(f"0 NavPu.")
+    if navpu_float <= 0 or math.isnan(navpu_float) or math.isinf(navpu_float):
+        logging.warning("Value guard: navpu %s for '%s' is invalid, passing.", navpu_float, fund_name)
+        return None
 
-    return fund_name , [fund_dt, fund_value]
+    return fund_name, [fund_dt, navpu_float]
 
 
 
@@ -64,25 +78,33 @@ def extract(bank_name : str, bank_id : int):
 
     # SCRAPE
     response = requests.get(URL)
-    assert response.status_code == 200
+    if response.status_code != 200:
+        raise RuntimeError(f"HTTP {response.status_code} for {URL}")
     soup = BeautifulSoup(response.content, 'html.parser')
 
     # DATE
     dt_str = soup.find('h2').get_text(strip=True)
     dt_match = re.search(r'([A-Za-z]{3} \d{1,2}, \d{4})', dt_str)
-    
+    if not dt_match:
+        raise ValueError(f"Could not parse date from page header: {dt_str!r}")
     dt_header = extract_time(dt_str=dt_match.group(1))
 
     # FUNDS
     start = soup.find(class_="table-title mt-5")
+    if not start:
+        raise ValueError(f"Could not find fund table on page for bank_id={bank_id}")
 
     for tb in start.find_all_next('tbody'):
         for tr in tb.find_all('tr'):
             try:
-                fund_name , new_row = extract_row_values(tr=tr, dt_default=dt_header)
-                
+                row_data = extract_row_values(tr=tr, dt_default=dt_header)
+                if not row_data:
+                    continue
+
+                fund_name, new_row = row_data
+
                 logging.info(fund_name)
-            
+
                 file_path = f"{OUTPUT_FOLDER}/{fund_name}.csv"
 
                 # Create new file
@@ -91,12 +113,13 @@ def extract(bank_name : str, bank_id : int):
                         writer = csv.writer(f)
                         writer.writerow(['date', 'value'])
                         writer.writerow(new_row)
-                # Append only if not recorded date
+                # Append only if date not already recorded
                 else:
                     with open(file_path, 'r', newline='') as f:
-                        last_row = deque(csv.reader(f), maxlen=1)[0]
+                        rows = deque(csv.reader(f), maxlen=1)
+                        last_row = rows[0] if rows else None
 
-                    if last_row[0] != new_row[0]:
+                    if last_row is None or last_row[0] != new_row[0]:
                         with open(file_path, 'a', newline='') as f:
                             writer = csv.writer(f)
                             writer.writerow(new_row)
@@ -104,12 +127,14 @@ def extract(bank_name : str, bank_id : int):
             
             except Exception as e:
                 logging.exception(e)
-                
-                fund_name, fund_value = extract_row_text(tr=tr)
-                
-                with open('data/scrape_errors.csv', 'a', newline='') as f:
-                    writer = csv.writer(f)
-                    writer.writerow([fund_name, fund_value])
+                try:
+                    fund_name, fund_value = extract_row_text(tr=tr)
+                    if fund_name and fund_value:
+                        with open('data/scrape_errors.csv', 'a', newline='') as f:
+                            writer = csv.writer(f)
+                            writer.writerow([fund_name, fund_value])
+                except Exception:
+                    pass
 
                 continue
 

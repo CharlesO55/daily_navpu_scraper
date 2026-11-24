@@ -43,4 +43,5 @@ def build_df_from_uitf_funds(selected_funds):
     df_master.sort_values(['fund_name', 'date'], inplace=True)
     del df_list , temp_df
 
+    df_master['value'] = df_master['value'].astype(float) 
     return df_master

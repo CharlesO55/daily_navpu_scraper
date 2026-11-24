@@ -7,8 +7,11 @@ def calculate_daily_delta(df_raw : pd.DataFrame) -> pd.DataFrame:
     
     df['pct_change'] = df.groupby('fund_name')['value'].pct_change()
 
-    df['cumulative_return'] = df.groupby('fund_name')['pct_change'].transform(
-        lambda x: (1 + x.fillna(0)).cumprod() - 1
+    # Compute cumulative return directly from values relative to the first value
+    # in the filtered date range, to avoid floating-point drift from chaining
+    # many small daily pct_changes via cumprod.
+    df['cumulative_return'] = df.groupby('fund_name')['value'].transform(
+        lambda x: (x / x.iloc[0]) - 1
     )
 
     return df
